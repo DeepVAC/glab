@@ -3,26 +3,30 @@ import statistics
 import math
 import cv2
 
-def takeLUPlacex(elem):
-    elem = elem[0]
-    return elem.most_right_xy[0]
+similar_min_angle = 15
+def isSimilarAngle(angle1, angle2):
+    return True if abs(angle1 - angle2) < similar_min_angle  or 180 - abs(angle1 - angle2)<similar_min_angle  else False
 
-def takeLUPlacey(elem):
-    elem = elem[0]
-    return elem.most_bottom_xy[1]
+def orderedByRatio(rect):
+    rect = rect
+    return max(rect[1][0]/rect[1][1], rect[1][1]/rect[1][0])
 
-def takeRDPlacex(elem): 
-    elem = elem[0]
-    return elem.most_left_xy[0]
+def getLUPlaceX(elem):
+    return elem[0].most_right_xy[0]
 
-def takeRDPlacey(elem):
-    elem = elem[0]
-    return elem.most_top_xy[1]
+def getLUPlaceY(elem):
+    return elem[0].most_bottom_xy[1]
 
-def takex(elem):
+def getRDPlaceX(elem): 
+    return elem[0].most_left_xy[0]
+
+def getRDPlaceY(elem):
+    return elem[0].most_top_xy[1]
+
+def getX(elem):
     return elem[0]
 
-def takey(elem):
+def getY(elem):
     return elem[1]
 
 class AggressiveBox:
@@ -37,7 +41,7 @@ class AggressiveBox:
         #水平化操作放到这里
         self.rect2reg = rect
         self.shape = shape
-        self.credit = credit_by_shape
+        self.credit_by_shape = credit_by_shape
         self.candidate_box_list_left_up = []
         self.candidate_box_list_right_down = []
         self.real_angle = real_angle
@@ -46,10 +50,10 @@ class AggressiveBox:
 
     def init4Points(self):
         boxes = list(cv2.boxPoints(self.ori_rect))
-        boxes.sort(key=takex)
+        boxes.sort(key=getX)
         self.most_left_xy = boxes[0]
         self.most_right_xy = boxes[3]
-        boxes.sort(key=takey)
+        boxes.sort(key=getY)
         self.most_top_xy = boxes[0]
         self.most_bottom_xy = boxes[3]
 
@@ -94,19 +98,15 @@ class AggressiveBox:
     def sortCandidateBox(self):
         #按照r->l排序
         if self.real_angle > 45 and self.real_angle < 135:
-            self.candidate_box_list_left_up.sort(key=takeLUPlacey, reverse=True)
-            self.candidate_box_list_right_down.sort(key=takeRDPlacey)
+            self.candidate_box_list_left_up.sort(key=getLUPlaceY, reverse=True)
+            self.candidate_box_list_right_down.sort(key=getRDPlaceY)
         else:
-            self.candidate_box_list_left_up.sort(key=takeLUPlacex, reverse=True)
-            self.candidate_box_list_right_down.sort(key=takeRDPlacex)
-
+            self.candidate_box_list_left_up.sort(key=getLUPlaceX, reverse=True)
+            self.candidate_box_list_right_down.sort(key=getRDPlaceX)
         #按照l -> r 排序
 
-    
     def isMerge(self, rect):
         similiar = isSimilarAngle(self.real_angle, rect[0].real_angle)
-        #print(self.real_angle, rect[0].real_angle)
-        #print(similiar)
         rect = rect[0].getRect()
         x = self.ori_rect[0][0] - rect[0][0]
         y = self.ori_rect[0][1] - rect[0][1]
@@ -115,11 +115,11 @@ class AggressiveBox:
         h = min(self.ori_rect[1]) + min(rect[1])
         if distance - w > h:
             return False
-        #print('#################',max(rect[1]) / min(rect[1]))
-        if max(rect[1]) / min(rect[1]) <= self.box_min_wh_ratio:
+
+        if not self.credit_by_shape:
             return True
+
         h_ratio = min(rect[1])/min(self.ori_rect[1])
-        #print('###############################h_ratio:',h_ratio)
         return h_ratio>=self.min_h_ratio and h_ratio<=self.max_h_ratio and similiar
 
     def isTruncated(self, rect):
@@ -136,66 +136,39 @@ class AggressiveBox:
             rect_box_1.extend(flat_list)
         self.ori_rect = cv2.minAreaRect(np.array(rect_box_1).astype(np.int32))
 
-    def mergeLeftOrUp(self):
+    def mergeLeftOrUpElseRightOrBottom(self, candidate_box_list_left_up_or_right_down):
         result_ids = []
         while True:
             merge_count = 0
-            for idx,rect in enumerate(self.candidate_box_list_left_up):
+            for idx,rect in enumerate(candidate_box_list_left_up_or_right_down):
                 if rect is None:
                     continue
 
-                if self.isMerge(rect):
-                    self.merge(rect)
-                    self.candidate_box_list_left_up[idx] = None
-                    result_ids.append(rect[1])
-                    merge_count+=1
-                else:
-                    break
+                if not self.isMerge(rect):
+                    return result_ids
+
+                self.merge(rect)
+                candidate_box_list_left_up_or_right_down[idx] = None
+                result_ids.append(rect[1])
+                merge_count+=1
+
             if merge_count == 0:
                 break
         return result_ids 
 
-    def mergeRightOrBottom(self):
-        result_ids = []
-        while True:
-            merge_count = 0
-            for idx,rect in enumerate(self.candidate_box_list_right_down): 
-                if rect is None:
-                    continue
-
-                if self.isMerge(rect):
-                    self.merge(rect)
-                    self.candidate_box_list_right_down[idx] = None
-                    result_ids.append(rect[1])
-                    merge_count+=1
-                else:
-                    break
-            if merge_count == 0:
-                break
-        return result_ids
-
     def mergeRects(self):
         merge_ids = []
-        merge_ids.extend(self.mergeLeftOrUp())
-        merge_ids.extend(self.mergeRightOrBottom())
+        merge_ids.extend(self.mergeLeftOrUpElseRightOrBottom(self.candidate_box_list_left_up))
+        merge_ids.extend(self.mergeLeftOrUpElseRightOrBottom(self.candidate_box_list_right_down))
         return merge_ids
-
-similar_min_angle = 15
-
-def isSimilarAngle(angle1, angle2):
-    return True if abs(angle1 - angle2) < similar_min_angle  or 180 - abs(angle1 - angle2)<similar_min_angle  else False
-
-def orderedByRatio(rect):
-    rect = rect
-    return max(rect[1][0]/rect[1][1], rect[1][1]/rect[1][0])
 
 class DeepvacOcrFrame:
     def __init__(self, img, rect_list, is_oneway=False):
         self.merge_ratio = 0.7
         self.similar_box_ratio = 0.95
-
-        self.img  = img
-        self.shape = self.img.shape
+        self.credit_shape_ratio = 2.0
+        #self.img  = img
+        self.shape = img.shape
         self.median_angle = 0
         self.rect_list = rect_list
         self.is_oneway = is_oneway
@@ -224,7 +197,6 @@ class DeepvacOcrFrame:
             if isSimilarAngle(x, median_angle):
                 self.similar_box_num+=1
         
-
         if self.is_oneway:
             return 
 
@@ -238,16 +210,12 @@ class DeepvacOcrFrame:
             return
 
     def createAggressiveBox(self, rect):
-        credit_by_shape = False
-        #
         real_angle = abs(rect[2] - 90) if rect[1][0] < rect[1][1] else abs(rect[2])
-        real_angle = 0 if real_angle==180 else real_angle 
-        if max(rect[1][0]/rect[1][1], rect[1][1]/rect[1][0]) >= 3:
+        real_angle = 0 if real_angle==180 else real_angle
+        
+        credit_by_shape = False
+        if max(rect[1][0]/rect[1][1], rect[1][1]/rect[1][0]) >= self.credit_shape_ratio:
             credit_by_shape = True
-        elif isSimilarAngle(real_angle, self.median_angle):
-            credit_by_shape = True
-        else:
-            credit_by_shape = False
 
         return AggressiveBox(rect, self.shape, real_angle, True, credit_by_shape)
     
@@ -262,31 +230,17 @@ class DeepvacOcrFrame:
                 aggressive_rect.addCandidateBox2Merge(rect, i+offset+1, merge_ratio, convex)
         
         aggressive_rect.sortCandidateBox()
-        #print(aggressive_rect.candidate_box_list_left_up)
         merged_ids = aggressive_rect.mergeRects()
-        #print('merged_id:',merged_ids)
+
         for merged_id in merged_ids:
             self.aggresive_box_list[merged_id] = None
         
         return aggressive_rect
 
     def __call__(self):
-        '''
-        for i,rect in enumerate(self.aggresive_box_list):
-            boxes = cv2.boxPoints(rect.getRect())
-            cv2.polylines(self.img,[np.array(boxes).astype(np.int32)],True,(255,0,0),1)
-            x_min, y_min = np.min(boxes, axis=0)
-            cv2.putText(self.img, str(i), (x_min, y_min), cv2.FONT_HERSHEY_COMPLEX,0.5,(0,0,255),1)
-        save_name = 'vis/'+self.img_name.split('.')[0]+'_ori.jpg'
-        cv2.imwrite(save_name, self.img)
-        '''
-
         new_rect_list = []
         for i,rect in enumerate(self.aggresive_box_list):
-            #print('rect:',i)
             if rect is None:
-                #print('\n\n')
                 continue
             new_rect_list.append(self.aggressive4mergePeer(rect, i))
-            #print('\n\n')
         return new_rect_list

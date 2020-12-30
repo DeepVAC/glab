@@ -107,6 +107,7 @@ class AggressiveBox:
 
     def isMerge(self, rect):
         similiar = isSimilarAngle(self.real_angle, rect[0].real_angle)
+        credit_by_shape = rect[0].credit_by_shape
         rect = rect[0].getRect()
         x = self.ori_rect[0][0] - rect[0][0]
         y = self.ori_rect[0][1] - rect[0][1]
@@ -116,7 +117,7 @@ class AggressiveBox:
         if distance - w > h:
             return False
 
-        if not self.credit_by_shape:
+        if not credit_by_shape:
             return True
 
         h_ratio = min(rect[1])/min(self.ori_rect[1])

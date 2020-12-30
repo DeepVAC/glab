@@ -8,7 +8,6 @@ def isSimilarAngle(angle1, angle2):
     return True if abs(angle1 - angle2) < similar_min_angle  or 180 - abs(angle1 - angle2)<similar_min_angle  else False
 
 def orderedByRatio(rect):
-    rect = rect
     return max(rect[1][0]/rect[1][1], rect[1][1]/rect[1][0])
 
 def getLUPlaceX(elem):
@@ -215,7 +214,7 @@ class DeepvacOcrFrame:
         real_angle = 0 if real_angle==180 else real_angle
         
         credit_by_shape = False
-        if max(rect[1][0]/rect[1][1], rect[1][1]/rect[1][0]) >= self.credit_shape_ratio:
+        if max(rect[1])/min(rect[1]) >= self.credit_shape_ratio:
             credit_by_shape = True
 
         return AggressiveBox(rect, self.shape, real_angle, True, credit_by_shape)

@@ -7,7 +7,7 @@
 #include "glab.h"
 #include "gemfield.h"
 #include "syszux_ocr_pse.h"
-
+#include <time.h>
 using namespace deepvac;
 
 cv::Mat crop_rect(cv::Mat img_, cv::RotatedRect rect) {

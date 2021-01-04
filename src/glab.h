@@ -7,7 +7,6 @@
 #pragma once
 #include "syszux_ocr_pse.h"
 #include "opencv2/opencv.hpp"
-#include "deepvac.h"
 
 namespace deepvac {
 

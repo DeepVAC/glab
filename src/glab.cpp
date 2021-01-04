@@ -5,7 +5,7 @@
  */
 
 #include "glab.h"
-namespace deepvac{
+namespace deepvac {
 
 float similar_min_angle = 15;
 bool isSimilarAngle(float angle1, float angle2) {

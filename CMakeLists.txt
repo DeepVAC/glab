@@ -3,10 +3,10 @@
 # You may not use this file except in compliance with the License.
 
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
-project(pydeepvac
+project(glab
     VERSION 0.1.0
-    DESCRIPTION "A library for using PyTorch model in C++."
-    HOMEPAGE_URL "https://github.com/deepvac/libdeepvac"
+    DESCRIPTION "Glab algorithm in C++."
+    HOMEPAGE_URL "https://github.com/deepvac/glab"
     LANGUAGES CXX)
 
 option(GARRULOUS_GEMFIELD "Build deepvac libraries garrulously" OFF)
@@ -29,15 +29,15 @@ find_package(OpenCV REQUIRED)
 find_package(Deepvac REQUIRED)
 
 if(GARRULOUS_GEMFIELD)
-    message(STATUS "will build pydeepvac library garrulously...")
+    message(STATUS "will build glab library garrulously...")
     add_definitions(-DGARRULOUS_GEMFIELD)
 endif()
 
-message(STATUS "TORCH_LIBRARIES " ${TORCH_LIBRARIES})
+#message(STATUS "TORCH_LIBRARIES " ${TORCH_LIBRARIES})
 message(STATUS "OpenCV_LIBS " ${OpenCV_LIBS})
 
-add_executable( pydeepvac ${CPP4PYTHON_LIST} )
-target_link_libraries( pydeepvac deepvac ${TORCH_LIBRARIES} ${OpenCV_LIBS})
-set_target_properties(pydeepvac PROPERTIES LINK_FLAGS_RELEASE -s)
-target_include_directories(pydeepvac PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_executable( glab ${CPP4PYTHON_LIST} )
+target_link_libraries( glab deepvac ${TORCH_LIBRARIES} ${OpenCV_LIBS})
+set_target_properties(glab PROPERTIES LINK_FLAGS_RELEASE -s)
+target_include_directories(glab PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

@@ -24,12 +24,12 @@ class AggressiveBox {
         void merge(std::tuple<AggressiveBox, int, float, std::vector<std::vector<cv::Point2f>>> rect);
         std::vector<int> mergeLeftOrUpElseRightOrBottom(std::vector<std::tuple<AggressiveBox, int, float, std::vector<std::vector<cv::Point2f>>>> candidate_box_list_left_up_or_right_down);
         std::vector<int> mergeRects();
-    public:
+    private:
         float min_h_ratio_ = 0.75;
         float max_h_ratio_ = 1.3;
         float box_min_wh_ratio_ = 2.0;
 
-	cv::RotatedRect rect_;
+        cv::RotatedRect rect_;
         cv::RotatedRect ori_rect_;
         cv::RotatedRect rect2reg_;
 
@@ -40,9 +40,6 @@ class AggressiveBox {
         std::vector<std::tuple<AggressiveBox, int, float, std::vector<std::vector<cv::Point2f>>>> candidate_box_list_right_down_;
         float real_angle_;
         std::string scaleAxis_;
-        std::vector<int> delete_ids_;
-        //std::tuple<AggressiveBox, int, float, std::vector<std::vector<cv::Point2f>>> candidate_box_list_left_up_;
-        //std::tuple<AggressiveBox, int, float, std::vector<std::vector<cv::Point2f>>> candidate_box_list_right_down_;
     public:
         std::vector<float> most_left_xy_;
         std::vector<float> most_right_xy_;
@@ -58,7 +55,7 @@ class DeepvacOcrFrame {
         int initDominantAngle();
         AggressiveBox creatAggressiveBox(cv::RotatedRect rect);
         void aggressive4mergePeer(AggressiveBox& aggressive_rect, int offset);
-	std::optional<std::vector<AggressiveBox>> operator() ();
+        std::optional<std::vector<AggressiveBox>> operator() ();
     private:
         float merge_ratio_ = 0.7;
         float similar_box_ratio_ = 0.95;

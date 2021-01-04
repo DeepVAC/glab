@@ -80,7 +80,7 @@ void AggressiveBox::init4Points() {
         std::vector<float> box_vec;
         for (int j=0; j<boxes.cols; j++) {
             box_vec.push_back(boxes.at<float>(i, j));
-	}
+        }
         boxes_vec.push_back(box_vec);
     }
     std::sort(boxes_vec.begin(), boxes_vec.end(), getX());
@@ -142,13 +142,13 @@ void AggressiveBox::addCandidateBox2Merge(AggressiveBox rect, int rect_id, float
             candidate_box_list_left_up_.push_back(candidate_box);
         } else {
             candidate_box_list_right_down_.push_back(candidate_box);
-	}
+        }
     } else {
         if (rect.getRect().center.x < ori_rect_.center.x) {
             candidate_box_list_left_up_.push_back(candidate_box);
-	} else {
+        } else {
             candidate_box_list_right_down_.push_back(candidate_box);
-	}
+        }
     }
 }
 
@@ -189,10 +189,10 @@ void AggressiveBox::merge(std::tuple<AggressiveBox, int, float, std::vector<std:
     rect_box_1.convertTo(rect_box_1, CV_32F);
     std::vector<cv::Point> rect_box_1_vec;
     for (int i=0; i<rect_box_1.rows; i++) {
-	cv::Point point;
-	point.x = (int)rect_box_1.at<float>(i, 0);
+        cv::Point point;
+        point.x = (int)rect_box_1.at<float>(i, 0);
         point.y = (int)rect_box_1.at<float>(i, 1);
-	rect_box_1_vec.push_back(point);
+        rect_box_1_vec.push_back(point);
     }
     if (contex.size() != 0) {
         for (int i=0; i<contex.size(); i++) {
@@ -201,8 +201,8 @@ void AggressiveBox::merge(std::tuple<AggressiveBox, int, float, std::vector<std:
                 point_t.x = (int)contex[i][j].x;
                 point_t.y = (int)contex[i][j].y;
                 rect_box_1_vec.push_back(point_t);
-	    }
-	}
+            }
+        }
     }
     ori_rect_ = cv::minAreaRect(rect_box_1_vec);
 }
@@ -216,14 +216,14 @@ std::vector<int> AggressiveBox::mergeLeftOrUpElseRightOrBottom(std::vector<std::
         for (int i=0; i<candidate_box_list_left_up_or_right_down.size(); i++) {
             auto rect = candidate_box_list_left_up_or_right_down[i];
             bool flag = false;
-	    for (auto id : delete_ids) {
-	        if (id == i) {
+            for (auto id : delete_ids) {
+                if (id == i) {
                     flag = true;
-		}
+                }
             }
             if (flag) {
                 continue;
-	    }
+            }
             if (!isMerge(std::get<0>(rect))) {
                 return result_ids;
             }
@@ -270,10 +270,10 @@ int DeepvacOcrFrame::initDominantAngle() {
             real_angle = std::abs(rect.angle - 90);
         } else {
             real_angle = std::abs(rect.angle);
-	}
-	if (real_angle == 180) {
+        }
+        if (real_angle == 180) {
             real_angle = 0;
-	}
+        }
         real_angle_list_.push_back(real_angle);
     }
     total_box_num_ = real_angle_list_.size();
@@ -289,7 +289,7 @@ int DeepvacOcrFrame::initDominantAngle() {
     for (auto angle: real_angle_list_) {
         if (isSimilarAngle(angle, median_angle)) {
             similar_box_num_ += 1;
-	}
+        }
     }
     if (is_oneway_) {
         return 0;
@@ -330,12 +330,12 @@ void DeepvacOcrFrame::aggressive4mergePeer(AggressiveBox& aggressive_rect, int o
         auto rect = aggressive_box_list_[i];
         if (!rect.valid_) {
             continue;
-	}
-	auto res_pair = aggressive_rect.ratio(rect.getRect());
+        }
+        auto res_pair = aggressive_rect.ratio(rect.getRect());
         auto merge_ratio = res_pair.first;
         auto convex = res_pair.second;
-	if (merge_ratio > merge_ratio_) {
-	    aggressive_rect.addCandidateBox2Merge(rect, i, merge_ratio, convex);
+        if (merge_ratio > merge_ratio_) {
+            aggressive_rect.addCandidateBox2Merge(rect, i, merge_ratio, convex);
         }
     }
     aggressive_rect.sortCandidateBox();

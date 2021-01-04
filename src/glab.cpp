@@ -19,17 +19,17 @@ struct orderedByRatio {
     bool operator()(cv::RotatedRect const &rect1, cv::RotatedRect const &rect2) {
         float ratio1 = std::max(rect1.size.width/rect1.size.height, rect1.size.height/rect1.size.width);
         float ratio2 = std::max(rect2.size.width/rect2.size.height, rect2.size.height/rect2.size.width);
-	return ratio1 > ratio2;
+        return ratio1 > ratio2;
     }
 };
 
-struct by_X { 
+struct getX { 
     bool operator()(std::vector<float> const &a, std::vector<float> const &b) const { 
         return a[0] < b[0];
     }
 };
 
-struct by_Y { 
+struct getY { 
     bool operator()(std::vector<float> const &a, std::vector<float> const &b) const { 
         return a[1] < b[1];
     }
@@ -83,10 +83,10 @@ void AggressiveBox::init4Points() {
 	}
         boxes_vec.push_back(box_vec);
     }
-    std::sort(boxes_vec.begin(), boxes_vec.end(), by_X());
+    std::sort(boxes_vec.begin(), boxes_vec.end(), getX());
     most_left_xy_ = boxes_vec[0];
     most_right_xy_ = boxes_vec[3];
-    std::sort(boxes_vec.begin(), boxes_vec.end(), by_Y());
+    std::sort(boxes_vec.begin(), boxes_vec.end(), getY());
     most_top_xy_ = boxes_vec[0];
     most_bottom_xy_ = boxes_vec[3];
 }
